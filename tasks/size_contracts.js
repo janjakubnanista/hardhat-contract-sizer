@@ -28,7 +28,7 @@ task(
   const config = hre.config.contractSizer;
 
   if (!UNITS[config.unit]) {
-    throw new HardhatPluginError(`Invalid unit: ${ config.unit }`);
+  throw new HardhatPluginError(`Invalid unit: ${ config.unit }`);
   }
 
   const formatSize = function (size) {
@@ -42,7 +42,7 @@ task(
 
   const outputPath = path.resolve(
     hre.config.paths.cache,
-    '.hardhat_contract_sizer_output.json'
+  '.hardhat_contract_sizer_output.json'
   );
 
   const previousSizes = {};
@@ -57,55 +57,58 @@ task(
     });
   }
 
-  await Promise.all(fullNames.map(async function (fullName) {
-    if (config.only.length && !config.only.some(m => fullName.match(m))) return;
-    if (config.except.length && config.except.some(m => fullName.match(m))) return;
+await Promise.all(fullNames.map(async function (fullName) {
+  if (config.only.length && !config.only.some(m => fullName.match(m))) return;
+  if (config.except.length && config.except.some(m => fullName.match(m))) return;
 
-    const { deployedBytecode, bytecode } = await hre.artifacts.readArtifact(fullName);
-    const deploySize = Buffer.from(
-      deployedBytecode.replace(/__\$\w*\$__/g, '0'.repeat(40)).slice(2),
-      'hex'
-    ).length;
-    const initSize = Buffer.from(
-      bytecode.replace(/__\$\w*\$__/g, '0'.repeat(40)).slice(2),
-      'hex'
-    ).length;
+  const { deployedBytecode, bytecode } = await hre.artifacts.readArtifact(fullName);
+      const deploySize = Buffer.from(
+    deployedBytecode.replace(/__\$\w*\$__/g, '0'.repeat(40)).slice(2),
+    'hex'
+      ).length;
+      const initSize = Buffer.from(
+    bytecode.replace(/__\$\w*\$__/g, '0'.repeat(40)).slice(2),
+    'hex'
+      ).length;
 
-    outputData.push({
-      fullName,
-      displayName: config.disambiguatePaths ? fullName : fullName.split(':').pop(),
-      deploySize,
-      previousDeploySize: previousSizes[fullName] || null,
-      initSize,
-      previousInitSize: previousInitSizes[fullName] || null,
-    });
-  }));
+      outputData.push({
+        fullName,
+    displayName: config.disambiguatePaths ? fullName : fullName.split(':').pop(),
+        deploySize,
+        previousDeploySize: previousSizes[fullName] || null,
+        initSize,
+        previousInitSize: previousInitSizes[fullName] || null,
+      });
+}));
 
   if (config.alphaSort) {
-    outputData.sort((a, b) => a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : -1);
+  outputData.sort((a, b) => a.displayName.toUpperCase() > b.displayName.toUpperCase() ? 1 : -1);
   } else {
     outputData.sort((a, b) => a.deploySize - b.deploySize);
   }
 
-  await fs.promises.writeFile(outputPath, JSON.stringify(outputData), { flag: 'w' });
+  await fs.promises.mkdir(path.dirname(outputPath), { recursive: true });
+  await fs.promises.writeFile(outputPath, JSON.stringify(outputData), {
+    flag: "w",
+  });
 
   const table = new Table({
-    style: { head: [], border: [], 'padding-left': 2, 'padding-right': 2 },
+  style: { head: [], border: [], 'padding-left': 2, 'padding-right': 2 },
     chars: {
-      mid: '·',
-      'top-mid': '|',
-      'left-mid': ' ·',
-      'mid-mid': '|',
-      'right-mid': '·',
-      left: ' |',
-      'top-left': ' ·',
-      'top-right': '·',
-      'bottom-left': ' ·',
-      'bottom-right': '·',
-      middle: '·',
-      top: '-',
-      bottom: '-',
-      'bottom-mid': '|',
+    mid: '·',
+    'top-mid': '|',
+    'left-mid': ' ·',
+    'mid-mid': '|',
+    'right-mid': '·',
+    left: ' |',
+    'top-left': ' ·',
+    'top-right': '·',
+    'bottom-left': ' ·',
+    'bottom-right': '·',
+    middle: '·',
+    top: '-',
+    bottom: '-',
+    'bottom-mid': '|',
     },
   });
 
@@ -116,7 +119,7 @@ task(
       content: chalk.gray(`Solc version: ${compiler.version}`),
     },
     {
-      content: chalk.gray(`Optimizer enabled: ${compiler.settings.optimizer.enabled}`),
+    content: chalk.gray(`Optimizer enabled: ${compiler.settings.optimizer.enabled}`),
     },
     {
       content: chalk.gray(`Runs: ${compiler.settings.optimizer.runs}`),
@@ -125,7 +128,7 @@ task(
 
   table.push([
     {
-      content: chalk.bold('Contract Name'),
+    content: chalk.bold('Contract Name'),
     },
     {
       content: chalk.bold(`Deployed size (${config.unit}) (change)`),
@@ -145,7 +148,7 @@ task(
     let deploySize = formatSize(item.deploySize);
     let initSize = formatSize(item.initSize);
 
-    if (item.deploySize > DEPLOYED_SIZE_LIMIT || item.initSize > INIT_SIZE_LIMIT) {
+  if (item.deploySize > DEPLOYED_SIZE_LIMIT || item.initSize > INIT_SIZE_LIMIT) {
       oversizedContracts++;
     }
 
@@ -161,14 +164,14 @@ task(
       initSize = chalk.yellow.bold(initSize);
     }
 
-    let deployDiff = '';
-    let initDiff = '';
+  let deployDiff = '';
+  let initDiff = '';
 
     if (item.previousDeploySize) {
       if (item.deploySize < item.previousDeploySize) {
-        deployDiff = chalk.green(`-${formatSize(item.previousDeploySize - item.deploySize)}`);
+      deployDiff = chalk.green(`-${formatSize(item.previousDeploySize - item.deploySize)}`);
       } else if (item.deploySize > item.previousDeploySize) {
-        deployDiff = chalk.red(`+${formatSize(item.deploySize - item.previousDeploySize)}`);
+      deployDiff = chalk.red(`+${formatSize(item.deploySize - item.previousDeploySize)}`);
       } else {
         deployDiff = chalk.gray(formatSize(0));
       }
@@ -176,9 +179,9 @@ task(
 
     if (item.previousInitSize) {
       if (item.initSize < item.previousInitSize) {
-        initDiff = chalk.green(`-${formatSize(item.previousInitSize - item.initSize)}`);
+      initDiff = chalk.green(`-${formatSize(item.previousInitSize - item.initSize)}`);
       } else if (item.initSize > item.previousInitSize) {
-        initDiff = chalk.red(`+${formatSize(item.initSize - item.previousInitSize)}`);
+      initDiff = chalk.red(`+${formatSize(item.initSize - item.previousInitSize)}`);
       } else {
         initDiff = chalk.gray(formatSize(0));
       }
@@ -186,19 +189,21 @@ task(
 
     table.push([
       { content: item.displayName },
-      { content: `${deploySize} (${deployDiff})`, hAlign: 'right' },
-      { content: `${initSize} (${initDiff})`, hAlign: 'right' },
+    { content: `${deploySize} (${deployDiff})`, hAlign: 'right' },
+    { content: `${initSize} (${initDiff})`, hAlign: 'right' },
     ]);
   }
 
   console.log(table.toString());
-  if (config.outputFile)
+  if (config.outputFile) {
+    fs.mkdirSync(path.dirname(config.outputFile), { recursive: true });
     fs.writeFileSync(config.outputFile, `${stripAnsi(table.toString())}\n`);
+  }
 
   if (oversizedContracts > 0) {
     console.log();
 
-    const message = `Warning: ${oversizedContracts} contracts exceed the size limit for mainnet deployment (${formatSize(DEPLOYED_SIZE_LIMIT)} ${config.unit} deployed, ${formatSize(INIT_SIZE_LIMIT)} ${config.unit} init).`;
+  const message = `Warning: ${oversizedContracts} contracts exceed the size limit for mainnet deployment (${formatSize(DEPLOYED_SIZE_LIMIT)} ${config.unit} deployed, ${formatSize(INIT_SIZE_LIMIT)} ${config.unit} init).`;
 
     if (config.strict) {
       throw new HardhatPluginError(message);
